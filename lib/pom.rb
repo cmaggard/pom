@@ -13,7 +13,7 @@ module Pom
   if options.include?('--help') || options.include?('-h')
     puts "A simple pomodoro timer in ruby."
     puts "Usage:"
-    puts "$ pom [-l INT -t TIME]"
+    puts "$ pom [-l INT -t TIME -u NUM_UPDATES]"
     puts "INT: number of pomodoros before long break occurs"
     puts "TIME: time (in minutes) of a single pomodoro"
     exit
@@ -33,6 +33,15 @@ module Pom
     @long_interval = options[i+1].to_i
     if @long_interval == 0
       puts "Invalid interval specified."
+      exit(1)
+    end
+  end
+
+  @num_updates = 100
+  if i = options.index('-u')
+    @num_updates = options[i+1].to_i
+    if @num_updates < 0
+      puts "Invalid number of updates specified."
       exit(1)
     end
   end
@@ -82,7 +91,7 @@ module Pom
 
   def runit(chunk)
     start(chunk)
-    progress(chunk.time, 20)
+    progress(chunk.time, @num_updates)
     finish(chunk)
   end
 
