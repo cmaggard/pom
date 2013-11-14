@@ -64,6 +64,7 @@ module Pom
     duration = 1.0 * time / number_of_updates
     progress_bar = ''
 
+
     0.upto(number_of_updates) do |i|
       percentage = (i * 1.0 / number_of_updates * 100).to_i
       progress_bar << '|' << '==' * i << '  ' * (number_of_updates - i) << "| #{percentage}%\r"
@@ -71,12 +72,16 @@ module Pom
       print progress_bar
       $stdout.flush
 
+      minutes_left = ((time - duration * i) / 60.0).ceil
+      adium_away minutes_left
+
       sleep duration
     end
   end
 
   def display_stats
     puts "\nYou've completed #{@pomodoro_count} full pomodoros."
+    adium_back
     exit 0
   end
 
@@ -87,12 +92,33 @@ module Pom
   def finish(chunk)
     `#{chunk.notifier} "#{chunk.message}" -sender com.apple.Terminal`
     beep
+    adium_back
   end
 
   def runit(chunk)
     start(chunk)
     progress(chunk.time, @num_updates)
     finish(chunk)
+  end
+
+  def adium_away(time)
+    osascript <<-END
+      tell application "Adium"
+        go away with message "Heads-down on work for #{time} more minutes"
+      end tell
+    END
+  end
+
+  def adium_back
+    osascript <<-END
+      tell application "Adium"
+        go available
+      end tell
+    END
+  end
+
+  def osascript(script)
+    system 'osascript', *script.split(/\n/).map { |line| ['-e', line] }.flatten
   end
 
   trap('INT') { display_stats }
